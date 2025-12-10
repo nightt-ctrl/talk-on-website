@@ -1,4 +1,3 @@
-import fs from 'fs';
 import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
@@ -9,59 +8,45 @@ import { Client, GatewayIntentBits } from 'discord.js';
 const app = express();
 const PORT = process.env.PORT || 3000;
 const PASSCODE = process.env.PASSCODE || 'mayshbaby';
-const MESSAGES_FILE = './messages.json';
 const BACKEND_URL = process.env.BACKEND_URL || `http://localhost:${PORT}`;
 
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-// ----------------- MESSAGE STORAGE -----------------
-
-// In-memory storage for chat
+// ----------------- In-memory chat storage -----------------
 let chatMessages = [];
 
-// Load from file on startup (optional)
-if (fs.existsSync(MESSAGES_FILE)) {
-    chatMessages = JSON.parse(fs.readFileSync(MESSAGES_FILE));
-}
+// ----------------- Backend routes -----------------
 
-// Helper functions
-const saveMessages = (messages) => fs.writeFileSync(MESSAGES_FILE, JSON.stringify(messages, null, 2));
-
-// ----------------- BACKEND ROUTES -----------------
-
-// GF sends a message
+// GF sends message
 app.post('/sendMessage', async (req, res) => {
     const { message, passcode } = req.body;
     if (passcode !== PASSCODE) return res.status(401).json({ error: 'Invalid passcode' });
 
-    try {
-        const newMessage = { sender: 'GF', message, timestamp: Date.now() };
-        chatMessages.push(newMessage);
-        saveMessages(chatMessages);
+    const newMessage = { sender: 'GF', message, timestamp: Date.now() };
+    chatMessages.push(newMessage);
 
-        // Send to Discord
-        if (client.isReady()) {
+    // Send to Discord
+    if (client.isReady()) {
+        try {
             const channel = await client.channels.fetch(process.env.DISCORD_CHANNEL_ID);
             if (channel) await channel.send(`GF: ${message}`);
+        } catch (err) {
+            console.error('Discord send error:', err);
         }
-
-        res.json({ status: 'ok', messages: chatMessages });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Server error' });
     }
+
+    res.json({ status: 'ok', messages: chatMessages });
 });
 
-// Bot reply route
+// Bot reply from Discord
 app.post('/botReply', (req, res) => {
     const { message } = req.body;
     if (!message) return res.status(400).json({ error: 'No message provided' });
 
     const newMessage = { sender: 'Bot', message, timestamp: Date.now() };
     chatMessages.push(newMessage);
-    saveMessages(chatMessages);
 
     res.json({ status: 'ok', messages: chatMessages });
 });
@@ -71,7 +56,7 @@ app.get('/getMessages', (req, res) => {
     res.json(chatMessages);
 });
 
-// ----------------- DISCORD BOT -----------------
+// ----------------- Discord bot -----------------
 
 const client = new Client({
     intents: [
@@ -87,7 +72,9 @@ client.once('ready', () => {
 
 client.on('messageCreate', async (msg) => {
     if (msg.author.bot) return;
-    if (msg.author.id !== process.env.YOUR_DISCORD_ID) return; // only your messages
+
+    // Optional: only allow your Discord ID to post replies
+    if (process.env.YOUR_DISCORD_ID && msg.author.id !== process.env.YOUR_DISCORD_ID) return;
 
     try {
         await fetch(`${BACKEND_URL}/botReply`, {
@@ -96,13 +83,13 @@ client.on('messageCreate', async (msg) => {
             body: JSON.stringify({ message: msg.content })
         });
     } catch (err) {
-        console.error('Failed to send Discord message to backend:', err);
+        console.error('Failed to forward Discord message to backend:', err);
     }
 });
 
 client.login(process.env.DISCORD_BOT_TOKEN);
 
-// ----------------- START EXPRESS SERVER -----------------
+// ----------------- Start server -----------------
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });

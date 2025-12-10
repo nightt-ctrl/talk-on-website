@@ -2,9 +2,9 @@ const chatBox = document.getElementById('chatBox');
 const input = document.getElementById('messageInput');
 const sendBtn = document.getElementById('sendBtn');
 
-const PASSCODE = 'mayshbaby'; // must match your backend passcode
+const PASSCODE = 'mayshbaby'; // must match backend
 
-// Fetch messages from backend
+// Fetch messages from backend and render
 async function fetchMessages() {
     try {
         const res = await fetch('/getMessages');
@@ -17,8 +17,7 @@ async function fetchMessages() {
                     </div>`;
         }).join('');
 
-        // Scroll to latest
-        chatBox.scrollTop = chatBox.scrollHeight;
+        chatBox.scrollTop = chatBox.scrollHeight; // auto-scroll
     } catch (err) {
         console.error('Failed to fetch messages:', err);
     }
@@ -42,10 +41,10 @@ async function sendMessage() {
     }
 }
 
-// Send on button click
+// Button click
 sendBtn.addEventListener('click', sendMessage);
 
-// Send on Enter key
+// Enter key
 input.addEventListener('keydown', e => {
     if (e.key === 'Enter') sendMessage();
 });
