@@ -34,8 +34,9 @@ async function fetchMessages() {
         chatBox.innerHTML = messages.map(msg => {
             const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             const cls = msg.sender === 'GF' ? 'gf' : 'bot';
+            const displayName = msg.sender === 'GF' ? 'you' : 'jeeva';
             return `<div class="message ${cls}">
-                        <strong>${msg.sender}</strong>: ${msg.message} <span class="time">${time}</span>
+                        <strong>${displayName}</strong>: ${msg.message} <span class="time">${time}</span>
                     </div>`;
         }).join('');
 
