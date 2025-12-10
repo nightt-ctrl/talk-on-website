@@ -25,11 +25,16 @@ app.post('/sendMessage', async (req, res) => {
     chatMessages.push(newMessage);
     console.log('GF message received:', message);
 
-    // Send to Discord
+    // Send to Discord + Ping you
     if (client.isReady()) {
         try {
             const channel = await client.channels.fetch(process.env.DISCORD_CHANNEL_ID);
-            if (channel) await channel.send(`GF: ${message}`);
+            if (channel) {
+                await channel.send({
+                    content: `<@${process.env.DISCORD_YOUR_USER_ID}> GF said: ${message}`,
+                    allowedMentions: { users: [process.env.DISCORD_YOUR_USER_ID] }
+                });
+            }
         } catch (err) {
             console.error('Discord send error:', err);
         }
@@ -57,7 +62,11 @@ const commands = [
     new SlashCommandBuilder()
         .setName('send')
         .setDescription('Send a message to the website chat')
-        .addStringOption(option => option.setName('message').setDescription('Message to send').setRequired(true))
+        .addStringOption(option =>
+            option.setName('message')
+                  .setDescription('Message to send')
+                  .setRequired(true)
+        )
 ].map(c => c.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_BOT_TOKEN);
