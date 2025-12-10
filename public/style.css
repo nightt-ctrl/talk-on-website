@@ -1,49 +1,96 @@
 body {
-    font-family: Arial, sans-serif;
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f0f2f5;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    margin: 0;
-    background: #f7f7f7;
 }
 
 .chat-container {
+    width: 100%;
+    max-width: 400px;
+    height: 600px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     display: flex;
     flex-direction: column;
-    width: 90%;
-    max-width: 400px;
-    height: 80%;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    background: white;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    overflow: hidden;
 }
 
-.chat-window {
+.chat-container h2 {
+    margin: 0;
+    padding: 15px;
+    background: #007bff;
+    color: white;
+    text-align: center;
+}
+
+.chat-box {
     flex: 1;
-    padding: 10px;
+    padding: 15px;
     overflow-y: auto;
-    border-bottom: 1px solid #ccc;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: #e5ddd5;
 }
 
-.chat-window div {
-    margin-bottom: 8px;
+.message {
+    padding: 10px;
+    border-radius: 10px;
+    max-width: 80%;
+    word-wrap: break-word;
+    font-size: 14px;
+}
+
+.message.gf {
+    align-self: flex-end;
+    background: #007bff;
+    color: white;
+}
+
+.message.bot {
+    align-self: flex-start;
+    background: #f1f0f0;
+    color: #000;
+}
+
+.message .time {
+    display: block;
+    font-size: 10px;
+    color: rgba(255,255,255,0.7);
+    margin-top: 2px;
+    text-align: right;
+}
+
+.input-area {
+    display: flex;
+    padding: 10px;
+    border-top: 1px solid #ccc;
+    background: #fff;
 }
 
 #messageInput {
+    flex: 1;
     padding: 10px;
-    border: none;
-    flex: 0;
-    width: calc(100% - 20px);
+    border-radius: 20px;
+    border: 1px solid #ccc;
+    outline: none;
+    font-size: 14px;
 }
 
 #sendBtn {
-    padding: 10px;
+    margin-left: 10px;
+    padding: 10px 20px;
+    border: none;
     background: #007bff;
     color: white;
-    border: none;
+    border-radius: 20px;
     cursor: pointer;
+    font-size: 14px;
 }
 
 #sendBtn:hover {
