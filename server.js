@@ -1,30 +1,28 @@
 import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
-import fetch from 'node-fetch';
 import 'dotenv/config';
-import { Client, GatewayIntentBits } from 'discord.js';
+import fetch from 'node-fetch';
+import { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } from 'discord.js';
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 const PASSCODE = process.env.PASSCODE || 'mayshbaby';
-const BACKEND_URL = process.env.BACKEND_URL || 'https://talk-on-website-production.up.railway.app';
+const BACKEND_URL = process.env.BACKEND_URL;
 
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-// In-memory chat storage
 let chatMessages = [];
 
-// ----------------- Backend routes -----------------
+// ---------------- Backend routes ----------------
 app.post('/sendMessage', async (req, res) => {
     const { message, passcode } = req.body;
     if (passcode !== PASSCODE) return res.status(401).json({ error: 'Invalid passcode' });
 
     const newMessage = { sender: 'GF', message, timestamp: Date.now() };
     chatMessages.push(newMessage);
-
     console.log('GF message received:', message);
 
     // Send to Discord
@@ -42,54 +40,69 @@ app.post('/sendMessage', async (req, res) => {
 
 app.post('/botReply', (req, res) => {
     const { message } = req.body;
-    console.log('BotReply hit, message:', message);
     if (!message) return res.status(400).json({ error: 'No message provided' });
 
     const newMessage = { sender: 'Bot', message, timestamp: Date.now() };
     chatMessages.push(newMessage);
-
-    console.log('chatMessages now:', chatMessages);
+    console.log('Bot message added:', message);
     res.json({ status: 'ok', messages: chatMessages });
 });
 
-app.get('/getMessages', (req, res) => {
-    res.json(chatMessages);
-});
+app.get('/getMessages', (req, res) => res.json(chatMessages));
 
-// ----------------- Discord bot -----------------
-const client = new Client({
-    intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent
-    ]
-});
+// ---------------- Discord bot ----------------
+const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+
+const commands = [
+    new SlashCommandBuilder()
+        .setName('send')
+        .setDescription('Send a message to the website chat')
+        .addStringOption(option => option.setName('message').setDescription('Message to send').setRequired(true))
+].map(c => c.toJSON());
+
+const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_BOT_TOKEN);
+
+(async () => {
+    try {
+        console.log('Registering slash commands...');
+        await rest.put(
+            Routes.applicationGuildCommands(
+                process.env.DISCORD_CLIENT_ID,
+                process.env.DISCORD_GUILD_ID
+            ),
+            { body: commands }
+        );
+        console.log('Slash commands registered.');
+    } catch (err) {
+        console.error('Slash command registration failed:', err);
+    }
+})();
 
 client.once('ready', () => {
     console.log(`Discord Bot logged in as ${client.user.tag}`);
 });
 
-client.on('messageCreate', async (msg) => {
-    if (msg.author.bot) return;
-    if (msg.channel.id !== process.env.DISCORD_CHANNEL_ID) return;
+client.on('interactionCreate', async interaction => {
+    if (!interaction.isCommand()) return;
+    if (interaction.commandName === 'send') {
+        const message = interaction.options.getString('message');
+        console.log('Slash command received:', message);
 
-    console.log('Discord message received:', msg.content);
-
-    try {
-        const response = await fetch(`${BACKEND_URL}/botReply`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: msg.content })
-        });
-        console.log('Forwarded to backend, status:', response.status);
-    } catch (err) {
-        console.error('Failed to forward Discord message to backend:', err);
+        try {
+            await fetch(`${BACKEND_URL}/botReply`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message })
+            });
+            await interaction.reply({ content: 'Message sent to website!', ephemeral: true });
+        } catch (err) {
+            console.error('Failed to send slash command to backend:', err);
+            await interaction.reply({ content: 'Failed to send message.', ephemeral: true });
+        }
     }
 });
 
 client.login(process.env.DISCORD_BOT_TOKEN);
 
-// ----------------- Start server -----------------
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+// ---------------- Start server ----------------
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

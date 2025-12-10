@@ -22,7 +22,7 @@ sendBtn.addEventListener('click', async () => {
         console.error('Failed to send message:', err);
     }
 
-    fetchMessages(); // immediately update chatbox
+    fetchMessages();
 });
 
 // Fetch messages from backend
@@ -47,4 +47,4 @@ async function fetchMessages() {
 
 // Poll every 2 seconds
 setInterval(fetchMessages, 2000);
-fetchMessages(); // initial load
+fetchMessages();
