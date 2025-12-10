@@ -2,7 +2,7 @@ const chatBox = document.getElementById('chatBox');
 const input = document.getElementById('messageInput');
 const sendBtn = document.getElementById('sendBtn');
 
-const PASSCODE = 'mayshbaby'; // keep this in sync with your .env
+const PASSCODE = 'mayshbaby'; // must match your backend passcode
 
 // Fetch messages from backend
 async function fetchMessages() {

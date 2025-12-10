@@ -8,20 +8,25 @@ import { Client, GatewayIntentBits } from 'discord.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const PASSCODE = process.env.PASSCODE || 'gf123';
+const PASSCODE = process.env.PASSCODE || 'mayshbaby';
 const MESSAGES_FILE = './messages.json';
+const BACKEND_URL = process.env.BACKEND_URL || `http://localhost:${PORT}`;
 
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-// Ensure messages.json exists
-if (!fs.existsSync(MESSAGES_FILE)) {
-    fs.writeFileSync(MESSAGES_FILE, JSON.stringify([]));
+// ----------------- MESSAGE STORAGE -----------------
+
+// In-memory storage for chat
+let chatMessages = [];
+
+// Load from file on startup (optional)
+if (fs.existsSync(MESSAGES_FILE)) {
+    chatMessages = JSON.parse(fs.readFileSync(MESSAGES_FILE));
 }
 
 // Helper functions
-const loadMessages = () => JSON.parse(fs.readFileSync(MESSAGES_FILE));
 const saveMessages = (messages) => fs.writeFileSync(MESSAGES_FILE, JSON.stringify(messages, null, 2));
 
 // ----------------- BACKEND ROUTES -----------------
@@ -32,11 +37,9 @@ app.post('/sendMessage', async (req, res) => {
     if (passcode !== PASSCODE) return res.status(401).json({ error: 'Invalid passcode' });
 
     try {
-        // Save to JSON
-        const messages = loadMessages();
         const newMessage = { sender: 'GF', message, timestamp: Date.now() };
-        messages.push(newMessage);
-        saveMessages(messages);
+        chatMessages.push(newMessage);
+        saveMessages(chatMessages);
 
         // Send to Discord
         if (client.isReady()) {
@@ -44,47 +47,39 @@ app.post('/sendMessage', async (req, res) => {
             if (channel) await channel.send(`GF: ${message}`);
         }
 
-        res.json({ status: 'ok' });
+        res.json({ status: 'ok', messages: chatMessages });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Server error' });
     }
 });
 
-// Return chat history
-app.get('/getMessages', (req, res) => {
-    try {
-        res.json(loadMessages());
-    } catch (err) {
-        console.error(err);
-        res.status(500).json([]);
-    }
-});
-
-// Bot sends a message to frontend
+// Bot reply route
 app.post('/botReply', (req, res) => {
     const { message } = req.body;
     if (!message) return res.status(400).json({ error: 'No message provided' });
 
-    try {
-        const messages = loadMessages();
-        const newMessage = { sender: 'Bot', message, timestamp: Date.now() };
-        messages.push(newMessage);
-        saveMessages(messages);
+    const newMessage = { sender: 'Bot', message, timestamp: Date.now() };
+    chatMessages.push(newMessage);
+    saveMessages(chatMessages);
 
-        res.json({ status: 'ok' });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Server error' });
-    }
+    res.json({ status: 'ok', messages: chatMessages });
+});
+
+// Return chat history
+app.get('/getMessages', (req, res) => {
+    res.json(chatMessages);
 });
 
 // ----------------- DISCORD BOT -----------------
-const client = new Client({ intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent
-]});
+
+const client = new Client({
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent
+    ]
+});
 
 client.once('ready', () => {
     console.log(`Discord Bot logged in as ${client.user.tag}`);
@@ -92,10 +87,10 @@ client.once('ready', () => {
 
 client.on('messageCreate', async (msg) => {
     if (msg.author.bot) return;
-    if (msg.author.id !== process.env.YOUR_DISCORD_ID) return; // Only listen to your messages
+    if (msg.author.id !== process.env.YOUR_DISCORD_ID) return; // only your messages
 
     try {
-        await fetch(`http://localhost:${PORT}/botReply`, {
+        await fetch(`${BACKEND_URL}/botReply`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message: msg.content })
