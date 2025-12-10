@@ -8,18 +8,19 @@ import { Client, GatewayIntentBits } from 'discord.js';
 const app = express();
 const PORT = process.env.PORT || 8080;
 const PASSCODE = process.env.PASSCODE || 'mayshbaby';
-const BACKEND_URL = process.env.BACKEND_URL || `http://localhost:${PORT}`;
+
+// <-- Your Railway URL here -->
+const BACKEND_URL = process.env.BACKEND_URL || 'https://talk-on-website-production.up.railway.app';
 
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-// ----------------- In-memory chat storage -----------------
+// In-memory chat storage
 let chatMessages = [];
 
 // ----------------- Backend routes -----------------
 
-// GF sends message
 app.post('/sendMessage', async (req, res) => {
     const { message, passcode } = req.body;
     if (passcode !== PASSCODE) return res.status(401).json({ error: 'Invalid passcode' });
@@ -40,9 +41,9 @@ app.post('/sendMessage', async (req, res) => {
     res.json({ status: 'ok', messages: chatMessages });
 });
 
-// Bot reply from Discord
 app.post('/botReply', (req, res) => {
     const { message } = req.body;
+    console.log('BotReply received:', message); // DEBUG LOG
     if (!message) return res.status(400).json({ error: 'No message provided' });
 
     const newMessage = { sender: 'Bot', message, timestamp: Date.now() };
@@ -51,7 +52,6 @@ app.post('/botReply', (req, res) => {
     res.json({ status: 'ok', messages: chatMessages });
 });
 
-// Return chat history
 app.get('/getMessages', (req, res) => {
     res.json(chatMessages);
 });
@@ -70,11 +70,8 @@ client.once('ready', () => {
     console.log(`Discord Bot logged in as ${client.user.tag}`);
 });
 
-// Forward messages from Discord to backend
 client.on('messageCreate', async (msg) => {
-    if (msg.author.bot) return; // ignore bot messages
-
-    // Only listen in the designated Discord channel
+    if (msg.author.bot) return;
     if (msg.channel.id !== process.env.DISCORD_CHANNEL_ID) return;
 
     try {
