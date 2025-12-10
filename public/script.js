@@ -1,20 +1,23 @@
 const chatBox = document.getElementById('chatBox');
 const inputBox = document.getElementById('inputBox');
 const sendBtn = document.getElementById('sendBtn');
-const PASSCODE = 'mayshbaby'; // Make sure it matches your backend
+const PASSCODE = 'mayshbaby'; // Must match backend
 
 // Send message to backend
 sendBtn.addEventListener('click', async () => {
     const message = inputBox.value.trim();
+    console.log('Send button clicked, message:', message);
     if (!message) return;
     inputBox.value = '';
 
     try {
-        await fetch('/sendMessage', {
+        const res = await fetch('/sendMessage', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message, passcode: PASSCODE })
         });
+        const data = await res.json();
+        console.log('Send response:', data);
     } catch (err) {
         console.error('Failed to send message:', err);
     }
@@ -22,7 +25,7 @@ sendBtn.addEventListener('click', async () => {
     fetchMessages(); // immediately update chatbox
 });
 
-// Fetch messages and render
+// Fetch messages from backend
 async function fetchMessages() {
     try {
         const res = await fetch('/getMessages');
@@ -36,7 +39,7 @@ async function fetchMessages() {
                     </div>`;
         }).join('');
 
-        chatBox.scrollTop = chatBox.scrollHeight; // auto scroll
+        chatBox.scrollTop = chatBox.scrollHeight;
     } catch (err) {
         console.error('Failed to fetch messages:', err);
     }

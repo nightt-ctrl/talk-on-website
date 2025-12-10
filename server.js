@@ -8,8 +8,6 @@ import { Client, GatewayIntentBits } from 'discord.js';
 const app = express();
 const PORT = process.env.PORT || 8080;
 const PASSCODE = process.env.PASSCODE || 'mayshbaby';
-
-// <-- Your Railway URL here -->
 const BACKEND_URL = process.env.BACKEND_URL || 'https://talk-on-website-production.up.railway.app';
 
 app.use(cors());
@@ -20,13 +18,14 @@ app.use(express.static('public'));
 let chatMessages = [];
 
 // ----------------- Backend routes -----------------
-
 app.post('/sendMessage', async (req, res) => {
     const { message, passcode } = req.body;
     if (passcode !== PASSCODE) return res.status(401).json({ error: 'Invalid passcode' });
 
     const newMessage = { sender: 'GF', message, timestamp: Date.now() };
     chatMessages.push(newMessage);
+
+    console.log('GF message received:', message);
 
     // Send to Discord
     if (client.isReady()) {
@@ -43,12 +42,13 @@ app.post('/sendMessage', async (req, res) => {
 
 app.post('/botReply', (req, res) => {
     const { message } = req.body;
-    console.log('BotReply received:', message); // DEBUG LOG
+    console.log('BotReply hit, message:', message);
     if (!message) return res.status(400).json({ error: 'No message provided' });
 
     const newMessage = { sender: 'Bot', message, timestamp: Date.now() };
     chatMessages.push(newMessage);
 
+    console.log('chatMessages now:', chatMessages);
     res.json({ status: 'ok', messages: chatMessages });
 });
 
@@ -57,7 +57,6 @@ app.get('/getMessages', (req, res) => {
 });
 
 // ----------------- Discord bot -----------------
-
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -74,12 +73,15 @@ client.on('messageCreate', async (msg) => {
     if (msg.author.bot) return;
     if (msg.channel.id !== process.env.DISCORD_CHANNEL_ID) return;
 
+    console.log('Discord message received:', msg.content);
+
     try {
-        await fetch(`${BACKEND_URL}/botReply`, {
+        const response = await fetch(`${BACKEND_URL}/botReply`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message: msg.content })
         });
+        console.log('Forwarded to backend, status:', response.status);
     } catch (err) {
         console.error('Failed to forward Discord message to backend:', err);
     }
