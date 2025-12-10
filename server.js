@@ -6,7 +6,7 @@ import 'dotenv/config';
 import { Client, GatewayIntentBits } from 'discord.js';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 const PASSCODE = process.env.PASSCODE || 'mayshbaby';
 const BACKEND_URL = process.env.BACKEND_URL || `http://localhost:${PORT}`;
 
@@ -70,11 +70,12 @@ client.once('ready', () => {
     console.log(`Discord Bot logged in as ${client.user.tag}`);
 });
 
+// Forward messages from Discord to backend
 client.on('messageCreate', async (msg) => {
-    if (msg.author.bot) return;
+    if (msg.author.bot) return; // ignore bot messages
 
-    // Optional: only allow your Discord ID to post replies
-    if (process.env.YOUR_DISCORD_ID && msg.author.id !== process.env.YOUR_DISCORD_ID) return;
+    // Only listen in the designated Discord channel
+    if (msg.channel.id !== process.env.DISCORD_CHANNEL_ID) return;
 
     try {
         await fetch(`${BACKEND_URL}/botReply`, {
