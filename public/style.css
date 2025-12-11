@@ -1,15 +1,15 @@
-/* Center the chat container */
+/* ------------------ Body ------------------ */
 body {
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
     margin: 0;
-    background: #f0f2f5; /* optional: light background for page */
+    background: #f0f2f5; /* light page background */
     font-family: Arial, sans-serif;
 }
 
-/* Fixed rectangle container */
+/* ------------------ Chat Container ------------------ */
 .chat-container {
     width: 400px;
     max-width: 90%;
@@ -23,15 +23,17 @@ body {
     overflow: hidden;
 }
 
-/* Messages scroll area */
+/* ------------------ Messages Area ------------------ */
 #chatBox {
     flex: 1;
     padding: 12px;
     overflow-y: auto;
-    background: #f7f7f7; /* optional: slightly different bg inside container */
+    background: #f7f7f7; /* slightly different from container */
+    display: flex;
+    flex-direction: column;
 }
 
-/* Input area at the bottom */
+/* ------------------ Input Area ------------------ */
 .input-area {
     display: flex;
     border-top: 1px solid #ddd;
@@ -62,4 +64,86 @@ body {
 
 #sendBtn:hover {
     background-color: #357abd;
+}
+
+/* ------------------ Chat Bubbles ------------------ */
+.bubble {
+    max-width: 70%;
+    padding: 12px 16px;
+    margin: 10px 0;
+    border-radius: 16px;
+    font-size: 15px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    animation: fadeIn 0.15s ease;
+}
+
+/* YOU — Pink → Purple gradient */
+.bubble.gf {
+    background: linear-gradient(135deg, #ff69b4, #b266ff);
+    color: white;
+    align-self: flex-start;
+}
+
+/* YOU – Tail */
+.bubble.gf::after {
+    content: "";
+    position: absolute;
+    left: -8px;
+    bottom: 10px;
+    width: 14px;
+    height: 14px;
+    background: linear-gradient(135deg, #ff69b4, #b266ff);
+    border-bottom-right-radius: 12px;
+    transform: rotate(45deg);
+}
+
+/* JEEVA — Grey → Dark Grey */
+.bubble.bot {
+    background: linear-gradient(135deg, #777, #444);
+    color: white;
+    align-self: flex-end;
+}
+
+/* JEEVA – Tail */
+.bubble.bot::after {
+    content: "";
+    position: absolute;
+    right: -8px;
+    bottom: 10px;
+    width: 14px;
+    height: 14px;
+    background: linear-gradient(135deg, #777, #444);
+    border-bottom-left-radius: 12px;
+    transform: rotate(45deg);
+}
+
+/* ------------------ Bubble Text Styling ------------------ */
+.bubble-header {
+    font-weight: bold;
+    margin-bottom: 4px;
+    opacity: 0.85;
+}
+
+.bubble-text {
+    margin-bottom: 4px;
+}
+
+.bubble-time {
+    font-size: 11px;
+    opacity: 0.75;
+    align-self: flex-end;
+}
+
+/* ------------------ Fade-in Animation ------------------ */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
