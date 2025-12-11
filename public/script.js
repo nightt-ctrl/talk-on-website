@@ -6,18 +6,16 @@ const PASSCODE = 'mayshbaby'; // Must match backend
 // Send message to backend
 sendBtn.addEventListener('click', async () => {
     const message = inputBox.value.trim();
-    console.log('Send button clicked, message:', message);
     if (!message) return;
+
     inputBox.value = '';
 
     try {
-        const res = await fetch('/sendMessage', {
+        await fetch('/sendMessage', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message, passcode: PASSCODE })
         });
-        const data = await res.json();
-        console.log('Send response:', data);
     } catch (err) {
         console.error('Failed to send message:', err);
     }
@@ -31,14 +29,25 @@ async function fetchMessages() {
         const res = await fetch('/getMessages');
         const messages = await res.json();
 
-        chatBox.innerHTML = messages.map(msg => {
-            const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const cls = msg.sender === 'GF' ? 'gf' : 'bot';
-            const displayName = msg.sender === 'GF' ? 'you' : 'jeeva';
-            return `<div class="message ${cls}">
-                        <strong>${displayName}</strong>: ${msg.message} <span class="time">${time}</span>
-                    </div>`;
-        }).join('');
+        chatBox.innerHTML = messages
+            .map(msg => {
+                const time = new Date(msg.timestamp).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                const isGF = msg.sender === 'GF';
+                const displayName = isGF ? 'you' : 'jeeva';
+
+                return `
+                    <div class="bubble ${isGF ? 'gf' : 'bot'}">
+                        <div class="bubble-header">${displayName}</div>
+                        <div class="bubble-text">${msg.message}</div>
+                        <div class="bubble-time">${time}</div>
+                    </div>
+                `;
+            })
+            .join('');
 
         chatBox.scrollTop = chatBox.scrollHeight;
     } catch (err) {
