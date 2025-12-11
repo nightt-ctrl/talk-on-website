@@ -1,79 +1,65 @@
-.bubble {
-    max-width: 70%;
-    padding: 12px 16px;
-    margin: 16px 0;
-    border-radius: 16px;
-    font-size: 15px;
+/* Center the chat container */
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background: #f0f2f5; /* optional: light background for page */
+    font-family: Arial, sans-serif;
+}
+
+/* Fixed rectangle container */
+.chat-container {
+    width: 400px;
+    max-width: 90%;
+    height: 600px;
+    max-height: 90%;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
     display: flex;
     flex-direction: column;
-    position: relative;
-    animation: fadeIn 0.15s ease;
+    overflow: hidden;
 }
 
-/* YOU — Pink → Purple */
-.bubble.gf {
-    background: linear-gradient(135deg, #ff69b4, #b266ff);
+/* Messages scroll area */
+#chatBox {
+    flex: 1;
+    padding: 12px;
+    overflow-y: auto;
+    background: #f7f7f7; /* optional: slightly different bg inside container */
+}
+
+/* Input area at the bottom */
+.input-area {
+    display: flex;
+    border-top: 1px solid #ddd;
+    padding: 10px;
+    background: #fff;
+}
+
+#inputBox {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 20px;
+    border: 1px solid #ccc;
+    outline: none;
+    font-size: 14px;
+}
+
+#sendBtn {
+    margin-left: 8px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    background-color: #4a90e2;
     color: white;
-    align-self: flex-start;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
 }
 
-/* YOU – TAIL */
-.bubble.gf::after {
-    content: "";
-    position: absolute;
-    left: -8px;
-    bottom: 10px;
-    width: 14px;
-    height: 14px;
-    background: linear-gradient(135deg, #ff69b4, #b266ff);
-    border-bottom-right-radius: 12px;
-    transform: rotate(45deg);
-}
-
-/* JEEVA — Grey → Dark Grey */
-.bubble.bot {
-    background: linear-gradient(135deg, #777, #444);
-    color: white;
-    align-self: flex-end;
-}
-
-/* JEEVA – TAIL */
-.bubble.bot::after {
-    content: "";
-    position: absolute;
-    right: -8px;
-    bottom: 10px;
-    width: 14px;
-    height: 14px;
-    background: linear-gradient(135deg, #777, #444);
-    border-bottom-left-radius: 12px;
-    transform: rotate(45deg);
-}
-
-.bubble-header {
-    font-weight: bold;
-    margin-bottom: 4px;
-    opacity: 0.85;
-}
-
-.bubble-text {
-    margin-bottom: 4px;
-}
-
-.bubble-time {
-    font-size: 11px;
-    opacity: 0.75;
-    align-self: flex-end;
-}
-
-/* animation */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(5px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+#sendBtn:hover {
+    background-color: #357abd;
 }
