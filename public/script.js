@@ -12,12 +12,11 @@ sendBtn.addEventListener('click', async () => {
     inputBox.value = '';
 
     try {
-        const res = await fetch('/sendMessage', {
+        await fetch('/sendMessage', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message, passcode: PASSCODE })
         });
-        await res.json();
     } catch (err) {
         console.error('Failed to send message:', err);
     }
@@ -45,11 +44,14 @@ async function fetchMessages() {
                                 <div class="bubble-text">${msg.message}</div>
                                 <div class="bubble-time">${time}</div>`;
 
+            // Remove animation class to prevent looping
+            bubble.style.animation = 'none';
+
             chatBox.appendChild(bubble);
         });
 
+        // Update count
         if (newMessages.length > 0) {
-            chatBox.scrollTop = chatBox.scrollHeight;
             lastMessageCount = messages.length;
         }
 
