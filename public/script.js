@@ -3,19 +3,21 @@ const inputBox = document.getElementById('inputBox');
 const sendBtn = document.getElementById('sendBtn');
 const PASSCODE = 'mayshbaby'; // Must match backend
 
-// Send message to backend
+let lastMessageCount = 0; // Track how many messages are already displayed
+
+// ---------------- Send message to backend ----------------
 sendBtn.addEventListener('click', async () => {
     const message = inputBox.value.trim();
     if (!message) return;
-
     inputBox.value = '';
 
     try {
-        await fetch('/sendMessage', {
+        const res = await fetch('/sendMessage', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message, passcode: PASSCODE })
         });
+        await res.json();
     } catch (err) {
         console.error('Failed to send message:', err);
     }
@@ -23,38 +25,39 @@ sendBtn.addEventListener('click', async () => {
     fetchMessages();
 });
 
-// Fetch messages from backend
+// ---------------- Fetch messages from backend ----------------
 async function fetchMessages() {
     try {
         const res = await fetch('/getMessages');
         const messages = await res.json();
 
-        chatBox.innerHTML = messages
-            .map(msg => {
-                const time = new Date(msg.timestamp).toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
+        // Only append new messages
+        const newMessages = messages.slice(lastMessageCount);
 
-                const isGF = msg.sender === 'GF';
-                const displayName = isGF ? 'you' : 'jeeva';
+        newMessages.forEach(msg => {
+            const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const cls = msg.sender === 'GF' ? 'gf' : 'bot';
+            const displayName = msg.sender === 'GF' ? 'you' : 'jeeva';
 
-                return `
-                    <div class="bubble ${isGF ? 'gf' : 'bot'}">
-                        <div class="bubble-header">${displayName}</div>
-                        <div class="bubble-text">${msg.message}</div>
-                        <div class="bubble-time">${time}</div>
-                    </div>
-                `;
-            })
-            .join('');
+            const bubble = document.createElement('div');
+            bubble.className = `bubble ${cls}`;
+            bubble.innerHTML = `<div class="bubble-header">${displayName}</div>
+                                <div class="bubble-text">${msg.message}</div>
+                                <div class="bubble-time">${time}</div>`;
 
-        chatBox.scrollTop = chatBox.scrollHeight;
+            chatBox.appendChild(bubble);
+        });
+
+        if (newMessages.length > 0) {
+            chatBox.scrollTop = chatBox.scrollHeight;
+            lastMessageCount = messages.length;
+        }
+
     } catch (err) {
         console.error('Failed to fetch messages:', err);
     }
 }
 
-// Poll every 2 seconds
+// ---------------- Poll every 2 seconds ----------------
 setInterval(fetchMessages, 2000);
 fetchMessages();
